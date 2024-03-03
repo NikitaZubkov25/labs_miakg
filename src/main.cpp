@@ -39,10 +39,10 @@ int main(int argc, char *argv[]) {
                     if (SDL_KEYDOWN == e.type) {
                         switch (e.key.keysym.scancode) {
                         case SDL_SCANCODE_0:
-                            a++;
+                            a = std::min((int)a+4,150);
                             break;
                         case SDL_SCANCODE_1:
-                            a--;
+                            a = std::max((int)a-4,50);
                             break;
                         case SDL_SCANCODE_DOWN:
                             ym = std::max(ym-10, 0);
