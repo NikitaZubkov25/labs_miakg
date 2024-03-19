@@ -1,3 +1,3 @@
-make all
+cmake .
 
-./sdl2-demo
+make all && ./sdl2-demo

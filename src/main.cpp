@@ -12,7 +12,8 @@ SDL_Texture *gTexture = NULL;
 SDL_Surface *loadedSurface = NULL;
 
 int main(int argc, char *argv[]) {
-    float a = 100;
+    float a = 40;
+    float alpha = 0;
     int xm = SCREEN_WIDTH / 2, ym = SCREEN_HEIGHT / 2;
     if (!init(&gWindow, &gRenderer)) {
         printf("Failed to initialize!\n");
@@ -39,10 +40,16 @@ int main(int argc, char *argv[]) {
                     if (SDL_KEYDOWN == e.type) {
                         switch (e.key.keysym.scancode) {
                         case SDL_SCANCODE_0:
-                            a = std::min((int)a+4,150);
+                            a = std::min((int)a+4,200);
                             break;
                         case SDL_SCANCODE_1:
-                            a = std::max((int)a-4,50);
+                            a = std::max((int)a-4,20);
+                            break;
+                        case SDL_SCANCODE_Q:
+                            alpha -= 0.1;
+                            break;
+                        case SDL_SCANCODE_E:
+                            alpha += 0.1;
                             break;
                         case SDL_SCANCODE_DOWN:
                             ym = std::max(ym-10, 0);
@@ -66,7 +73,7 @@ int main(int argc, char *argv[]) {
                 }
                 SDL_RenderClear(gRenderer);
 
-                draw(loadedSurface, a, xm, ym);
+                draw(loadedSurface, a, xm, ym, alpha);
 
                 SDL_UpdateTexture(gTexture, NULL, loadedSurface->pixels, loadedSurface->pitch);
                 SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
