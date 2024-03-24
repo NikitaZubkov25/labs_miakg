@@ -52,16 +52,16 @@ int main(int argc, char *argv[]) {
                             alpha += 0.1;
                             break;
                         case SDL_SCANCODE_DOWN:
-                            ym = std::max(ym-10, 0);
-                            break;
-                        case SDL_SCANCODE_UP:
                             ym = std::min(ym+10, SCREEN_HEIGHT);
                             break;
+                        case SDL_SCANCODE_UP:
+                            ym = std::max(ym-10, 0);
+                            break;
                         case SDL_SCANCODE_RIGHT:
-                            xm = std::max(xm-10,0);
+                            xm = std::min(xm+10,SCREEN_WIDTH);
                             break;
                         case SDL_SCANCODE_LEFT:
-                            xm = std::min(xm+10,SCREEN_WIDTH);
+                            xm = std::max(xm-10,0);
                             break;
                         case SDL_SCANCODE_ESCAPE:
                             quit = true;
