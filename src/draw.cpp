@@ -121,6 +121,7 @@ void static drawTwoDots(float scale)
 
         affineTransformPoint(dotPoint,alpha);
         movePoint<SDL_FPoint>(dotPoint, moveCoords);
+        spinAroundPoint(dotPoint, mouseLastClickCoords, beta);
 
         put_pixel(dotPoint.x, dotPoint.y, RGB32(255, 0, 0));
     }
