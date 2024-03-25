@@ -2,102 +2,134 @@
 
 #include <math.h>
 #include "SDL_surface.h"
+#include <iostream>
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
 #define RGB32(r, g, b) static_cast<uint32_t>((((static_cast<uint32_t>(r) << 8) | g) << 8) | b)
 
-void put_pixel32(SDL_Surface *surface, int x, int y, Uint32 pixel, float alpha, int xm, int ym)
+static SDL_Point moveCoords, mouseLastClickCoords;
+static float scale = 0, beta = 0, alpha = 0;
+static SDL_Surface *surface;
+
+void put_pixel(int x, int y, Uint32 pixel)
 {
     assert(NULL != surface);
-    float rotate_x = x * cos(alpha) + y * sin(alpha);
-    float rotate_y = -x * sin(alpha) + y * cos(alpha);
-    x = rotate_x + xm;
-    y = rotate_y + ym;
-    if (x > SCREEN_WIDTH) return;
-    if (y > SCREEN_HEIGHT) return;
+
+    if (x > SCREEN_WIDTH && x >= 0) return;
+    if (y > SCREEN_HEIGHT && y >= 0) return;
 
     Uint32 *pixels = (Uint32 *)surface->pixels;
     pixels[(y * surface->w) + x] = pixel;
 }
 
-Uint32 get_pixel32(SDL_Surface *surface, int x, int y)
+void affineTransformPoint(SDL_FPoint &point, float alpha)
 {
-    assert(NULL != surface);
-
-    Uint32 *pixels = (Uint32 *)surface->pixels;
-    return pixels[(y * surface->w) + x];
+    point = {
+        x: point.x * cos(alpha) + point.y * sin(alpha),
+        y: -point.x * sin(alpha) + point.y * cos(alpha)
+    };
 }
 
-void static clear_surface(SDL_Surface *s)
+template <typename T>
+void movePoint(T &point, SDL_Point moveCoords)
+{
+    point = {
+        x: point.x + moveCoords.x,
+        y: point.y + moveCoords.y
+    };
+}
+
+void static clearSurface(SDL_Surface *s)
 {
     SDL_FillRect(s, NULL, 0x00000000);
 }
 
-void static draw_circle(SDL_Surface *s, float a, int xm, int ym, float alpha)
+void static drawCircle(float scale)
 {
-    float x, y;
+    SDL_FPoint circlePoint;
     for (float t = 0; t < (M_PI * 2); t += 0.01) {
-        x = a * cos(t) + a;
-        y = a * sin(t);
-        put_pixel32(s, x, y, RGB32(0, 255, 0), alpha, xm, ym);
+        circlePoint.x = scale * cos(t) + scale;
+        circlePoint.y = scale * sin(t);
+
+        affineTransformPoint(circlePoint, alpha);
+        movePoint<SDL_FPoint>(circlePoint, moveCoords);
+
+        put_pixel(circlePoint.x, circlePoint.y, RGB32(0, 255, 0));
     }
 }
 
-void static draw_line45deg(SDL_Surface *s, int xm, int ym, float alpha, float a)
+void static drawLine45deg(float scale)
 {
+    SDL_FPoint linePoint;
     for (float t = -4; t < 4; t += 0.0001) {
-        int x = t*a;
-        int y = -t*a;
-        put_pixel32(s, x, y, RGB32(140, 140, 200), alpha, xm, ym);
+        linePoint.x = t*scale;
+        linePoint.y = -t*scale;
+
+        affineTransformPoint(linePoint, alpha);
+        movePoint<SDL_FPoint>(linePoint, moveCoords);
+
+        put_pixel(linePoint.x, linePoint.y, RGB32(140, 140, 200));
     }
 }
 
-void static draw_cisoid(SDL_Surface *s, float a, int xm, int ym, float alpha)
+void static drawCisoid(float scale)
 {
-    float x = NAN;
-    float y = NAN;
+    SDL_FPoint cisoidPoint;
     for (float t = -3; t < 3; t += 0.0001) {
-        x = a * t * t / (1 + t * t);
-        y = a * t * t * t / (1 + t * t);
-        int xr = round(x) + 3;
-        int yr = round(y) + 3;
-        put_pixel32(s, xr, yr, RGB32(255, 255, 255), alpha, xm, ym);
+        cisoidPoint.x = scale * t * t / (1 + t * t);
+        cisoidPoint.y = scale * t * t * t / (1 + t * t);
+
+        affineTransformPoint(cisoidPoint,alpha);
+        movePoint(cisoidPoint, moveCoords);
+
+        put_pixel(cisoidPoint.x, cisoidPoint.y, RGB32(255, 255, 255));
     }
 }
 
-void static draw_two_dots(SDL_Surface *s, float a, int xm, int ym, float alpha)
+void static drawTwoDots(float scale)
 {
+    SDL_FPoint dotPoint;
     for (float t = 0; t <= 2 * M_PI; t += 0.01) {
-        float x = a / 30 * cos(t) + 11 * a / 20;
-        float y = a / 30 * sin(t) - a * 11 / 20;
-        put_pixel32(s, x, y, RGB32(255, 0, 0), alpha, xm, ym);
+        dotPoint.x = scale / 30 * cos(t) + 11 * scale / 20;
+        dotPoint.y = scale / 30 * sin(t) - scale * 11 / 20;
+
+        affineTransformPoint(dotPoint,alpha);
+        movePoint(dotPoint, moveCoords);
+
+        put_pixel(dotPoint.x, dotPoint.y, RGB32(255, 0, 0));
     }
     for (float t = 0; t <= 2 * M_PI; t += 0.01) {
-        float x = a / 30 * cos(t);
-        float y = a / 30 * sin(t);
-        put_pixel32(s, x, y, RGB32(255, 0, 0), alpha, xm, ym);
+        dotPoint.x = scale / 30 * cos(t);
+        dotPoint.y = scale / 30 * sin(t);
+
+        affineTransformPoint(dotPoint,alpha);
+        movePoint(dotPoint, moveCoords);
+
+        put_pixel(dotPoint.x, dotPoint.y, RGB32(255, 0, 0));
     }
 }
 
-void static draw_axises(SDL_Surface *s)
+void static drawAxises()
 {
     for (int i = 0; i < SCREEN_WIDTH; i++){
-        put_pixel32(s, i, SCREEN_HEIGHT/2, RGB32(255, 255, 255), 0, 0 ,0);
+        put_pixel(i, SCREEN_HEIGHT/2, RGB32(255, 255, 255));
     }
 
     for (int j = 0; j < SCREEN_HEIGHT; j++){
-        put_pixel32(s, SCREEN_WIDTH/2, j, RGB32(255, 255, 255), 0, 0, 0);
+        put_pixel(SCREEN_WIDTH/2, j, RGB32(255, 255, 255));
     }
 }
 
-void draw(SDL_Surface *s, float a, int xm, int ym, float alpha)
+void draw(SDL_Surface *s, SDL_Point moveCoordsArg, SDL_Point mouseLastClickCoordsArg, float betaArg, float alphaArg, float scale)
 {
-    clear_surface(s);
-    draw_axises(s);
-    draw_cisoid(s, a, xm, ym, alpha);
-    draw_circle(s, a, xm, ym, alpha);
-    draw_line45deg(s, xm, ym, alpha, a);
-    draw_two_dots(s,a,xm,ym, alpha);
+    surface = s; moveCoords = moveCoordsArg; mouseLastClickCoords = mouseLastClickCoordsArg; beta = betaArg; alpha = alphaArg;
+
+    clearSurface(s);
+    drawAxises();
+    drawCisoid(scale);
+    drawCircle(scale);
+    drawLine45deg(scale);
+    drawTwoDots(scale);
 }
