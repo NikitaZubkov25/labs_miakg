@@ -32,6 +32,17 @@ void affineTransformPoint(SDL_FPoint &point, float alpha)
     };
 }
 
+void spinAroundPoint(SDL_FPoint &pointToSpin, SDL_Point pointAround,float beta)
+{
+    pointToSpin.x -= pointAround.x;
+    pointToSpin.y -= pointAround.y;
+
+    affineTransformPoint(pointToSpin, beta);
+
+    pointToSpin.x += pointAround.x;
+    pointToSpin.y += pointAround.y;
+}
+
 template <typename T>
 void movePoint(T &point, SDL_Point moveCoords)
 {
@@ -55,6 +66,7 @@ void static drawCircle(float scale)
 
         affineTransformPoint(circlePoint, alpha);
         movePoint<SDL_FPoint>(circlePoint, moveCoords);
+        spinAroundPoint(circlePoint, mouseLastClickCoords, beta);
 
         put_pixel(circlePoint.x, circlePoint.y, RGB32(0, 255, 0));
     }
@@ -69,6 +81,7 @@ void static drawLine45deg(float scale)
 
         affineTransformPoint(linePoint, alpha);
         movePoint<SDL_FPoint>(linePoint, moveCoords);
+        spinAroundPoint(linePoint, mouseLastClickCoords, beta);
 
         put_pixel(linePoint.x, linePoint.y, RGB32(140, 140, 200));
     }
@@ -83,6 +96,7 @@ void static drawCisoid(float scale)
 
         affineTransformPoint(cisoidPoint,alpha);
         movePoint(cisoidPoint, moveCoords);
+        spinAroundPoint(cisoidPoint, mouseLastClickCoords, beta);
 
         put_pixel(cisoidPoint.x, cisoidPoint.y, RGB32(255, 255, 255));
     }
@@ -96,7 +110,8 @@ void static drawTwoDots(float scale)
         dotPoint.y = scale / 30 * sin(t) - scale * 11 / 20;
 
         affineTransformPoint(dotPoint,alpha);
-        movePoint(dotPoint, moveCoords);
+        movePoint<SDL_FPoint>(dotPoint, moveCoords);
+        spinAroundPoint(dotPoint, mouseLastClickCoords, beta);
 
         put_pixel(dotPoint.x, dotPoint.y, RGB32(255, 0, 0));
     }
@@ -105,7 +120,7 @@ void static drawTwoDots(float scale)
         dotPoint.y = scale / 30 * sin(t);
 
         affineTransformPoint(dotPoint,alpha);
-        movePoint(dotPoint, moveCoords);
+        movePoint<SDL_FPoint>(dotPoint, moveCoords);
 
         put_pixel(dotPoint.x, dotPoint.y, RGB32(255, 0, 0));
     }
