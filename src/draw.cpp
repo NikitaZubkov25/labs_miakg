@@ -10,6 +10,7 @@
 #define RGB32(r, g, b) static_cast<uint32_t>((((static_cast<uint32_t>(r) << 8) | g) << 8) | b)
 
 static SDL_Point moveCoords, mouseLastClickCoords;
+static SDL_FPoint tmpCoords = {x:0, y:0}, diffCoords;
 static float scale = 0, beta = 0, alpha = 0;
 static SDL_Surface *surface;
 
@@ -34,6 +35,7 @@ void affineTransformPoint(SDL_FPoint &point, float alpha)
 
 void spinAroundPoint(SDL_FPoint &pointToSpin, SDL_Point pointAround,float beta)
 {
+    tmpCoords = pointToSpin;
     pointToSpin.x -= pointAround.x;
     pointToSpin.y -= pointAround.y;
 
@@ -41,6 +43,10 @@ void spinAroundPoint(SDL_FPoint &pointToSpin, SDL_Point pointAround,float beta)
 
     pointToSpin.x += pointAround.x;
     pointToSpin.y += pointAround.y;
+    diffCoords = {
+        x: pointToSpin.x - tmpCoords.x,
+        y: pointToSpin.y - tmpCoords.y
+    };
 }
 
 template <typename T>
@@ -138,9 +144,9 @@ void static drawAxises()
     }
 }
 
-void draw(SDL_Surface *s, SDL_Point moveCoordsArg, SDL_Point mouseLastClickCoordsArg, float betaArg, float alphaArg, float scale)
+void draw(SDL_Surface *s, SDL_Point moveCoordsArg, SDL_Point mouseLastClickCoordsArg, SDL_FPoint &diffCoordsArg, float betaArg, float alphaArg, float scale)
 {
-    surface = s; moveCoords = moveCoordsArg; mouseLastClickCoords = mouseLastClickCoordsArg; beta = betaArg; alpha = alphaArg;
+    surface = s; moveCoords = moveCoordsArg; mouseLastClickCoords = mouseLastClickCoordsArg; beta = betaArg; alpha = alphaArg, diffCoords = diffCoordsArg;
 
     clearSurface(s);
     drawAxises();
@@ -148,4 +154,5 @@ void draw(SDL_Surface *s, SDL_Point moveCoordsArg, SDL_Point mouseLastClickCoord
     drawCircle(scale);
     drawLine45deg(scale);
     drawTwoDots(scale);
+    diffCoordsArg = diffCoords;
 }

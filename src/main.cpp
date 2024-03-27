@@ -15,7 +15,7 @@ SDL_Surface *loadedSurface = NULL;
 int main(int argc, char *argv[]) {
     float scale = 40;
     float alpha = 0;
-    float beta = 0;
+    float beta = 0, prevBeta = 0;
     SDL_Point mouseLastClickCoords = {
         x: SCREEN_WIDTH / 2,
         y: SCREEN_HEIGHT / 2
@@ -23,6 +23,10 @@ int main(int argc, char *argv[]) {
     SDL_Point moveCoords = {
         x: SCREEN_WIDTH / 2,
         y: SCREEN_HEIGHT / 2
+    };
+    SDL_FPoint diffCords = {
+        x: 0,
+        y: 0
     };
     if (!init(&gWindow, &gRenderer)) {
         printf("Failed to initialize!\n");
@@ -47,6 +51,16 @@ int main(int argc, char *argv[]) {
                         quit = true;
                     }
                     if (SDL_MOUSEBUTTONDOWN == e.type) {
+                        alpha += beta;
+                        beta = 0;
+
+                        moveCoords.x += diffCords.x;
+                        moveCoords.y += diffCords.y;
+                        diffCords = {
+                            x: 0,
+                            y: 0
+                        };
+
                         mouseLastClickCoords.x = e.button.x;
                         mouseLastClickCoords.y = e.button.y;
                     }
@@ -92,7 +106,7 @@ int main(int argc, char *argv[]) {
                 }
                 SDL_RenderClear(gRenderer);
 
-                draw(loadedSurface, moveCoords, mouseLastClickCoords, beta, alpha, scale);
+                draw(loadedSurface, moveCoords, mouseLastClickCoords, diffCords, beta, alpha, scale);
 
                 SDL_UpdateTexture(gTexture, NULL, loadedSurface->pixels, loadedSurface->pitch);
                 SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
