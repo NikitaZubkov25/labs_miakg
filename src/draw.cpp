@@ -10,7 +10,7 @@
 #define RGB32(r, g, b) static_cast<uint32_t>((((static_cast<uint32_t>(r) << 8) | g) << 8) | b)
 
 static SDL_Point moveCoords, mouseLastClickCoords;
-static SDL_FPoint tmpCoords = {x:0, y:0}, diffCoords;
+static SDL_FPoint tmpCoords1 = {x:0, y:0}, tmpCoords2 = {x:0, y:0}, diffCoords;
 static float scale = 0, beta = 0, alpha = 0;
 static SDL_Surface *surface;
 
@@ -33,19 +33,45 @@ void affineTransformPoint(SDL_FPoint &point, float alpha)
     };
 }
 
+template <typename T,typename P>
+void equalizePoints(T &point1,P &point2){
+    point1.x = point2.x;
+    point1.y = point2.y;
+}
+
+template <typename T,typename P>
+void minusPoints(T &point1,P &point2){
+    point1.x -= point2.x;
+    point1.y -= point2.y;
+}
+
+template <typename T,typename P>
+void plusPoints(T &point1,P &point2){
+    point1.x += point2.x;
+    point1.y += point2.y;
+}
+
+
 void spinAroundPoint(SDL_FPoint &pointToSpin, SDL_Point pointAround,float beta)
 {
-    tmpCoords = pointToSpin;
+    equalizePoints(tmpCoords1,moveCoords);
+    equalizePoints(tmpCoords2,moveCoords);
+
     pointToSpin.x -= pointAround.x;
     pointToSpin.y -= pointAround.y;
 
+    minusPoints(tmpCoords1, pointAround);
+
     affineTransformPoint(pointToSpin, beta);
 
+    affineTransformPoint(tmpCoords1, beta);
+
+    plusPoints(tmpCoords1, pointAround);
     pointToSpin.x += pointAround.x;
     pointToSpin.y += pointAround.y;
     diffCoords = {
-        x: pointToSpin.x - tmpCoords.x,
-        y: pointToSpin.y - tmpCoords.y
+        x: tmpCoords1.x - tmpCoords2.x,
+        y: tmpCoords1.y - tmpCoords2.y
     };
 }
 

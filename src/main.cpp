@@ -54,12 +54,18 @@ int main(int argc, char *argv[]) {
                         alpha += beta;
                         beta = 0;
 
-                        moveCoords.x += diffCords.x;
-                        moveCoords.y += diffCords.y;
+                        std::cout << moveCoords.x << " " <<  moveCoords.y << std::endl;
+                        std::cout << diffCords.x << " " <<  diffCords.y << std::endl;
+
+                        moveCoords.x += round( diffCords.x);
+                        moveCoords.y += round( diffCords.y);
                         diffCords = {
                             x: 0,
                             y: 0
                         };
+
+                        std::cout << moveCoords.x << " " <<  moveCoords.y << std::endl;
+                        std::cout << diffCords.x << " " <<  diffCords.y << std::endl;
 
                         mouseLastClickCoords.x = e.button.x;
                         mouseLastClickCoords.y = e.button.y;
