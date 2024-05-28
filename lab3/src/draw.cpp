@@ -91,25 +91,32 @@ bool cyrusBeckClip(const LineSegment &segment, SDL_FPoint *clippedStart, SDL_FPo
     return true;
 }
 
-void draw(SDL_Surface *s, float radius, SDL_FPoint moveCoords)
+void draw(SDL_Surface *s, float radius, SDL_FPoint moveCoords, Mode currentMode)
 {
     SDL_FillRect(s, NULL, RGB32(0, 0, 0));
 
     std::vector<LineSegment> circleSegments = generateCircleLineSegments(radius, moveCoords);
 
-    for (const LineSegment &segment : circleSegments) {
+    for (int i = 0; i < circleSegments.size(); i++) {
+        LineSegment segment = circleSegments[i];
         SDL_FPoint clippedStart, clippedEnd;
+        Uint32 color = currentMode == clipOutside ? RGB32(250, 50, 50) : RGB32(100, 50, 240);
+
         if (cyrusBeckClip(segment, &clippedStart, &clippedEnd)) {
-            for (float t = 0; t <= 1; t += 0.001) {
-                float x = (clippedEnd.x - clippedStart.x) * t + clippedStart.x;
-                float y = (clippedEnd.y - clippedStart.y) * t + clippedStart.y;
-                put_pixel32(s, x, y, RGB32(100, 50, 240));
+            if (currentMode != clipInside) {
+                for (float t = 0; t <= 1; t += 0.001) {
+                    float x = (clippedEnd.x - clippedStart.x) * t + clippedStart.x;
+                    float y = (clippedEnd.y - clippedStart.y) * t + clippedStart.y;
+                    put_pixel32(s, x, y, color);
+                }
             }
         } else {
-            for (float t = 0; t <= 1; t += 0.001) {
-                float x = (segment.p1.x - segment.p0.x) * t + segment.p0.x;
-                float y = (segment.p1.y - segment.p0.y) * t + segment.p0.y;
-                put_pixel32(s, x, y, RGB32(250, 50, 50));
+            if (currentMode != clipOutside) {
+                for (float t = 0; t <= 1; t += 0.001) {
+                    float x = (segment.p1.x - segment.p0.x) * t + segment.p0.x;
+                    float y = (segment.p1.y - segment.p0.y) * t + segment.p0.y;
+                    put_pixel32(s, x, y, RGB32(250, 50, 50));
+                }
             }
         }
     }

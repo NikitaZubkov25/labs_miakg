@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
         return 0;
     }
     bool quit = false;
+    Mode currentMode = clipInside;
     SDL_Event e;
 
     float radius = 120;
@@ -85,6 +86,15 @@ int main(int argc, char *argv[])
             }
             if (SDL_KEYDOWN == e.type) {
                 switch (e.key.keysym.scancode) {
+                case SDL_SCANCODE_5:
+                    currentMode = clipInside;
+                    break;
+                case SDL_SCANCODE_6:
+                    currentMode = clipOutside;
+                    break;
+                case SDL_SCANCODE_7:
+                    currentMode = clipVisible;
+                    break;
                 case SDL_SCANCODE_UP:
                     moveCoords.y -= 5;
                     break;
@@ -110,7 +120,7 @@ int main(int argc, char *argv[])
         }
         SDL_RenderClear(gRenderer);
 
-        draw(loadedSurface, radius, moveCoords);
+        draw(loadedSurface, radius, moveCoords, currentMode);
 
         SDL_UpdateTexture(gTexture, NULL, loadedSurface->pixels, loadedSurface->pitch);
         SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
